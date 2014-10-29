@@ -1,51 +1,20 @@
 import pygame, sys
 from pygame.locals import *
 import random
+from GameplayClass import Gameplay
+from GameplayClass import set_highscore
 
-
-# Need to create class for these global varables
 SCREEN_WIDTH = 400
 SCREEN_HEIGHT = 570
 pygame.init()
 DISPLAYSURF = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 FPS = 60.0 # frames per second setting
 fpsClock = pygame.time.Clock()
-# set up the colors
-red = random.randrange(0,255)
-green = random.randrange(0,255)
-blue = random.randrange(0,255)
-RANDOM_COLOR = (red, green, blue)
-RANDOM_OPP = (255-red,255-green,255-blue)
-is_game_over = False
-
-DISPLAYSURF.fill(RANDOM_COLOR)
 pygame.display.set_caption('Flappy Bird!')
 
-obstacleArray = []
-goalArray = []
+gameplay = Gameplay()
 
 
-def clamp(n, minn, maxn):
-    return max(min(maxn, n), minn)
-
-
-class Flappy:
-    def __init__(self):
-        self.img = pygame.transform.scale(pygame.image.load('blackball.png'), (50,50))
-        self.bounding_rect = pygame.Rect(10,100, 50, 50)
-        self.velocity = (0.0,0.0)
-        self.position = (10.0,100.0)
-        self.acceleration = (0.0, 800.0)
-
-    def updatePosition(self,delta):
-        self.velocity = (self.velocity[0]+self.acceleration[0]*delta, self.velocity[1]+self.acceleration[1]*delta)
-        self.velocity = (self.velocity[0], clamp(self.velocity[1],-250,500))
-        self.position = (self.position[0]+self.velocity[0]*delta, self.position[1]+self.velocity[1]*delta)
-        self.bounding_rect = pygame.Rect(self.position[0],self.position[1], 50, 50)
-
-    def applyImpulse(self):
-        impulse = -350
-        self.velocity = (self.velocity[0], impulse)
 
 class Obstacle(pygame.Rect):
     def __init__(self):
@@ -58,104 +27,58 @@ def collision(rect_a, rect_b):
 
 def makeNewObstacle():
     obs1 = Obstacle()
-    pygame.draw.rect(DISPLAYSURF, RANDOM_OPP, obs1)
+    pygame.draw.rect(DISPLAYSURF, gameplay.RANDOM_OPP, obs1)
     distBtwnObst = random.randrange(125,180)
     topObs = pygame.Rect(400, obs1.top-400-distBtwnObst, 50, 400)
     goal = pygame.Rect(405, 0, 40, 1000)
-    pygame.draw.rect(DISPLAYSURF, RANDOM_OPP, topObs)
-    obstacleArray.append(obs1)
-    obstacleArray.append(topObs)
-    goalArray.append(goal)
+    pygame.draw.rect(DISPLAYSURF, gameplay.RANDOM_OPP, topObs)
+    gameplay.obstacleArray.append(obs1)
+    gameplay.obstacleArray.append(topObs)
+    gameplay.goalArray.append(goal)
 
 def game_over():
-    global is_game_over
-    is_game_over = True
-    set_highscore(score)
+    gameplay.is_game_over = True
+    set_highscore(gameplay.score)
     restartFont = pygame.font.Font(None, 60)
     restarttext = restartFont.render("Restart?", 1, (10,10,10))
     restarttextpos = (SCREEN_WIDTH/2-50, SCREEN_HEIGHT/2)
-    DISPLAYSURF.fill(RANDOM_COLOR)
+    DISPLAYSURF.fill(gameplay.RANDOM_COLOR)
     DISPLAYSURF.blit(restarttext, restarttextpos)
 
 
-def set_highscore(current_score):
-    high_score = 0
-    high_score_file = open("high_score.txt", "r")
-    high_score = int(high_score_file.read())
-    high_score_file.close()
 
-    if current_score > high_score:
-        high_score_file = open("high_score.txt", "w")
-        high_score_file.write(str(current_score))
-        high_score_file.close()
-
-    return max(current_score, high_score)
-
-
-flappy = Flappy()
-timeSinceObstacle = 0
-score = 0
-highScore = set_highscore(score)
-font = pygame.font.Font(None, 36)
-scoreText = font.render("Score: %d" % score, 1, (10,10,10))
-highText = font.render("High Score: %d" % highScore, 1, (10,10,10))
-highTextPos = highText.get_rect(centerx=2*SCREEN_WIDTH/5)
-textpos = scoreText.get_rect(centerx=4*SCREEN_WIDTH/5)
-red = random.randrange(0,255)
-green = random.randrange(0,255)
-blue = random.randrange(0,255)
-RANDOM_COLOR = (red, green, blue)
-RANDOM_OPP = (255-red,255-green,255-blue)
-is_game_over = False
 
 def restart():
-    global obstacleArray, goalArray, flappy, score, scoreText, highText, textpos, highTextPos, timeSinceObstacle, RANDOM_COLOR, RANDOM_OPP, is_game_over
-    obstacleArray = []
-    goalArray = []
-    flappy = Flappy()
+    global gameplay
+    gameplay = Gameplay()
     makeNewObstacle()
-    timeSinceObstacle = 0
-    score = 0
-    highScore = set_highscore(score)
-    font = pygame.font.Font(None, 36)
-    scoreText = font.render("Score: %d" % score, 1, (10,10,10))
-    highText = font.render("High Score: %d" % highScore, 1, (10,10,10))
-    highTextPos = highText.get_rect(centerx=2*SCREEN_WIDTH/5)
-    textpos = scoreText.get_rect(centerx=4*SCREEN_WIDTH/5)
-    red = random.randrange(0,255)
-    green = random.randrange(0,255)
-    blue = random.randrange(0,255)
-    RANDOM_COLOR = (red, green, blue)
-    RANDOM_OPP = (255-red,255-green,255-blue)
-    is_game_over = False
-
 
 
 restart()
 while True: # main game loop
-    if not is_game_over:
-        DISPLAYSURF.fill(RANDOM_COLOR)
+    if not gameplay.is_game_over:
+        DISPLAYSURF.fill(gameplay.RANDOM_COLOR)
 
-        if timeSinceObstacle > 2:
+        if gameplay.timeSinceObstacle > 2:
             makeNewObstacle()
-            timeSinceObstacle = 0
+            gameplay.timeSinceObstacle = 0
 
-        timeSinceObstacle += 1.0/FPS
+        gameplay.timeSinceObstacle += 1.0/FPS
 
-        DISPLAYSURF.blit(flappy.img, flappy.position)
+        DISPLAYSURF.blit(gameplay.flappy.img, gameplay.flappy.position)
 
-        for goal in goalArray:
-            if collision(flappy.bounding_rect, goal):
-                score+=1
-                goalArray.remove(goal)
+        for goal in gameplay.goalArray:
+            if collision(gameplay.flappy.bounding_rect, goal):
+                gameplay.score+=1
+                gameplay.goalArray.remove(goal)
             goal.left -= 2
 
-        for rectangle in obstacleArray:
-            if collision(flappy.bounding_rect, rectangle):
+        for rectangle in gameplay.obstacleArray:
+            if collision(gameplay.flappy.bounding_rect, rectangle):
                 game_over()
                 break
             rectangle.left -= 2
-            pygame.draw.rect(DISPLAYSURF, RANDOM_OPP, rectangle)
+            pygame.draw.rect(DISPLAYSURF, gameplay.RANDOM_OPP, rectangle)
 
 
         for event in pygame.event.get():
@@ -163,15 +86,15 @@ while True: # main game loop
                 pygame.quit()
                 sys.exit()
             elif event.type == MOUSEBUTTONUP:
-                flappy.applyImpulse()
+                gameplay.flappy.applyImpulse()
 
-        flappy.updatePosition(1.0/FPS)
+        gameplay.flappy.updatePosition(1.0/FPS)
 
-        if flappy.position[1] > 570:
+        if gameplay.flappy.position[1] > 570:
             game_over()
-        scoreText = font.render("Score: %d" % score, 1, (10,10,10))
-        DISPLAYSURF.blit(scoreText, textpos)
-        DISPLAYSURF.blit(highText, highTextPos)
+        gameplay.scoreText = gameplay.font.render("Score: %d" % gameplay.score, 1, (10,10,10))
+        DISPLAYSURF.blit(gameplay.scoreText, gameplay.textpos)
+        DISPLAYSURF.blit(gameplay.highText, gameplay.highTextPos)
     else:
         for event in pygame.event.get():
             if event.type == QUIT:
