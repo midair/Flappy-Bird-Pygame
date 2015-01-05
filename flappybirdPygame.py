@@ -20,7 +20,6 @@ class Obstacle(pygame.Rect):
     def __init__(self):
         super(self.__class__, self).__init__(400 ,random.randrange(200,500), 50, 400)
 
-
 def collision(rect_a, rect_b):
     separate = rect_a.right < rect_b.left or rect_a.left > rect_b.right or rect_a.top > rect_b.bottom or rect_a.bottom < rect_b.top
     return not separate
